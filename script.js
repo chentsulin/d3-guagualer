@@ -7,7 +7,7 @@ makeCircle(svg, {
   'cx': 600 / 2,
   'cy': 600 / 2,
   'r': 600 / 2,
-  'color': 'black'
+  'color': generateRandomColor()
 });
 
 function makeCircle(svg, attr) {
@@ -38,29 +38,38 @@ function handleMouseover() {
     'cx': original.cx + (original.r / 2),
     'cy': original.cy + (original.r / 2),
     'r': original.r / 2,
-    'color': 'black'
+    'color': generateRandomColor()
   });
 
   makeCircle(svg, {
     'cx': original.cx + (original.r / 2),
     'cy': original.cy - (original.r / 2),
     'r': original.r / 2,
-    'color': 'black'
+    'color': generateRandomColor()
   });
 
   makeCircle(svg, {
     'cx': original.cx - (original.r / 2),
     'cy': original.cy + (original.r / 2),
     'r': original.r / 2,
-    'color': 'black'
+    'color': generateRandomColor()
   });
 
   makeCircle(svg, {
     'cx': original.cx - (original.r / 2),
     'cy': original.cy - (original.r / 2),
     'r': original.r / 2,
-    'color': 'black'
+    'color': generateRandomColor()
   });
 }
 
+function getRandom0to255() {
+  return Math.floor(Math.random() * (255 + 1));
+}
 
+function generateRandomColor() {
+  return 'rgb('
+    + getRandom0to255() + ','
+    + getRandom0to255() + ','
+    + getRandom0to255() + ')';
+}
