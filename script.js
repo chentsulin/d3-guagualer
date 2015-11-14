@@ -4,11 +4,17 @@ var maxSize = 512;
 var minSize = 4;
 var dim = maxSize / minSize; // 128
 
+function unescapeBase64url(str) {
+  return (str + Array(5 - str.length % 4)
+    .join('='))
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+};
 
 var hasBase64Input = window.location.search.length > 1; //?=
 
 if (hasBase64Input) {
-  loadImage(window.location.search.substring(1), createFirstCircle);
+  loadImage(unescapeBase64url(window.location.search.substring(1)), createFirstCircle);
 } else {
   createFirstCircle();
 }
