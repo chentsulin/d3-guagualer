@@ -51,25 +51,25 @@ function createFirstCircle() {
     'cy': 512 / 2,
     'r': 512 / 2,
     'color': data ? avgColor(data, 1) : generateRandomColor(),
-    'level': 1
+    'level': 1,
+    'xOffset': 0,
+    'yOffset': 0
   });
 }
 
-function avgColor(data, level, position) {
+function avgColor(rgbaData, level, offset, position) {
   var dataset;
   if (level > 1) {
-    if (position === 'top-left') {
-      dataset = data.filter(function(d, i) { return (i % 128 < 64) && i < 8192 });
-    } else if (position === 'top-right') {
-      dataset = data.filter(function(d, i) { return (i % 128 >= 64) && i < 8192 });
-    } else if (position === 'bottom-left') {
-      dataset = data.filter(function(d, i) { return (i % 128 < 64) && i >= 8192 });
-    } else if (position === 'bottom-right') {
-      dataset = data.filter(function(d, i) { return (i % 128 >= 64) && i >= 8192 });
-    }
+    // level 2 => /2
+    // level 3 => /4
+    // level 4 => /8
+    var leftEdge = (dim / Math.pow(2, level - 1)) * offset.x;
+    var rightEdge = (dim / Math.pow(2, level - 1)) * (offset.x + 1);
+    var topEdge = (dim * dim / Math.pow(2, level - 1)) * offset.y;
+    var bottomEdge = (dim * dim / Math.pow(2, level - 1)) * (offset.y + 1);
+    dataset = rgbaData.filter(function(d, i) { return (i % dim >= leftEdge) && (i % dim < rightEdge) && i >= topEdge && i < bottomEdge });
   } else {
-    dataset = data;
-
+    dataset = rgbaData;
   }
   var denominator = dataset.length;
   var avgR = Math.round(dataset.map(function(d) { return d.r; })
@@ -80,23 +80,20 @@ function avgColor(data, level, position) {
     .reduce(function(previousValue, currentValue) { return previousValue + currentValue; }) / denominator);
   var avgA = Math.round(dataset.map(function(d) { return d.a; })
     .reduce(function(previousValue, currentValue) { return previousValue + currentValue; }) / denominator);
-  console.log('rgba(' + avgR + ',' + avgG + ',' + avgB + ',' + avgA + ')')
+  // console.log('rgba(' + avgR + ',' + avgG + ',' + avgB + ',' + avgA + ')')
   return 'rgba(' + avgR + ',' + avgG + ',' + avgB + ',' + (avgA) + ')';
 }
 
 
 function makeCircle(svg, attr) {
-  console.log('makeCircle', attr);
-
   var c = svg.append('circle');
   c
     .attr('cx', attr.cx)
     .attr('cy', attr.cy)
     .style('fill', attr.color)
     .attr('data-level', attr.level)
-    .attr('r', 0)
-    .transition()
-    .duration(500)
+    .attr('data-x-offset', attr.xOffset)
+    .attr('data-y-offset', attr.yOffset)
     .attr('r', attr.r);
 
   c.on('mouseover', handleMouseover);
@@ -108,8 +105,12 @@ function handleMouseover() {
     cx: +el.attr('cx'),
     cy: +el.attr('cy'),
     r: +el.attr('r'),
-    level: +el.attr('data-level')
+    level: +el.attr('data-level'),
+    xOffset: +el.attr('data-x-offset'),
+    yOffset: +el.attr('data-y-offset')
   };
+
+  if (original.level > 7) return;
 
   el.remove();
 
@@ -119,32 +120,56 @@ function handleMouseover() {
     'cx': original.cx - (original.r / 2),
     'cy': original.cy - (original.r / 2),
     'r': original.r / 2,
-    'color': data ? avgColor(data, nextLevel, 'top-left') : generateRandomColor(),
-    'level': nextLevel
+    'color': data ? avgColor(
+      data,
+      nextLevel,
+      { x: original.xOffset * 2, y: original.yOffset * 2 }
+    ) : generateRandomColor(),
+    'level': nextLevel,
+    'xOffset': original.xOffset * 2,
+    'yOffset': original.yOffset * 2
   });
 
   makeCircle(svg, {
     'cx': original.cx + (original.r / 2),
     'cy': original.cy - (original.r / 2),
     'r': original.r / 2,
-    'color': data ? avgColor(data, nextLevel, 'top-right') : generateRandomColor(),
-    'level': nextLevel
+    'color': data ? avgColor(
+      data,
+      nextLevel,
+      { x: original.xOffset * 2 + 1, y: original.yOffset * 2 }
+    ) : generateRandomColor(),
+    'level': nextLevel,
+    'xOffset': original.xOffset * 2 + 1,
+    'yOffset': original.yOffset * 2
   });
 
   makeCircle(svg, {
     'cx': original.cx - (original.r / 2),
     'cy': original.cy + (original.r / 2),
     'r': original.r / 2,
-    'color': data ? avgColor(data, nextLevel, 'bottom-left') : generateRandomColor(),
-    'level': nextLevel
+    'color': data ? avgColor(
+      data,
+      nextLevel,
+      { x: original.xOffset * 2, y: original.yOffset * 2 + 1 }
+    ) : generateRandomColor(),
+    'level': nextLevel,
+    'xOffset': original.xOffset * 2,
+    'yOffset': original.yOffset * 2 + 1
   });
 
   makeCircle(svg, {
     'cx': original.cx + (original.r / 2),
     'cy': original.cy + (original.r / 2),
     'r': original.r / 2,
-    'color': data ? avgColor(data, nextLevel, 'bottom-right') : generateRandomColor(),
-    'level': nextLevel
+    'color': data ? avgColor(
+      data,
+      nextLevel,
+      { x: original.xOffset * 2 + 1, y: original.yOffset * 2 + 1 }
+    ) : generateRandomColor(),
+    'level': nextLevel,
+    'xOffset': original.xOffset * 2 + 1,
+    'yOffset': original.yOffset * 2 + 1
   });
 
 }
