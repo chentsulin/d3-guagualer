@@ -11,10 +11,10 @@ function unescapeBase64url(str) {
     .replace(/_/g, '/');
 };
 
-var hasBase64Input = window.location.search.length > 1; //?=
+var hasInput = window.location.search.length > 1; //?=
 
-if (hasBase64Input) {
-  loadImage(unescapeBase64url(window.location.search.substring(1)), createFirstCircle);
+if (hasInput) {
+  loadImage(window.location.search.substring(1), false, createFirstCircle);
 } else {
   createFirstCircle();
 }
@@ -34,7 +34,7 @@ function transformRGBAData(dataset) {
 }
 
 
-function loadImage(base64, callback) {
+function loadImage(src, isBase64, callback) {
   var canvas = document.createElement('canvas').getContext('2d');
   var image = new Image();
   image.onload = function() {
@@ -42,7 +42,8 @@ function loadImage(base64, callback) {
     data = transformRGBAData(canvas.getImageData(0, 0, dim, dim).data);
     callback();
   };
-  image.src = 'data:image/png;base64,' + base64;
+  image.crossOrigin = 'anonymous';
+  image.src = isBase64 ? ('data:image/png;base64,' + src) : decodeURIComponent(src);
 }
 
 
